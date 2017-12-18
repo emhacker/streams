@@ -1,3 +1,7 @@
+'''
+Example: Eratosthenes sieve (https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
+Implemented in streams. (The sieve identifies numbers <= 9).
+'''
 from greenlet import greenlet
 import streams
 
