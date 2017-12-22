@@ -1,1 +1,1 @@
-from core import (Bolt, Consumer, dispatch)
+from core import (Channel, InputChannel, Bolt, ExecutionFlow)

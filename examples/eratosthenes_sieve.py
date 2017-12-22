@@ -1,30 +1,44 @@
 '''
-Example: Eratosthenes sieve (https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
-Implemented in streams. (The sieve identifies numbers <= 9).
+Example: Eratosthenes sieve
+(https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
+Implemented in streams. (The sieve identifies numbers <= 10).
 '''
-from greenlet import greenlet
 import streams
 
 
-def prime2(num):
-    return num if num and num % 2 else None
+def prime2(out, channel):
+    while True:
+        num = channel.take()
+        if num <= 1:
+            continue
+        if num == 2 or num % 2:
+            out.give(num)
 
 
-def prime3(num):
-    return num if num and num % 3 else None
-
-
-def announce(n):
-    print '{} is a prime number'.format(n)
+def prime3(out, channel):
+    while True:
+        num = channel.take()
+        if num == 3:
+            out.give(3)
+            continue
+        if num % 3:
+            out.give(num)
+            continue
+        if num >= 9:
+            # EOF.
+            out.give(None)
 
 
 if __name__ == '__main__':
-    b2 = streams.Bolt(prime2, 'b2')
-    b3 = streams.Bolt(prime3, 'b3')
-    c = streams.Consumer(announce, 'C')
-    # G2.
-    b2.set_successors(b3)
-    b3.set_successors(c)
-    # G3.
-    streams.dispatch(b2, xrange(6))
-    print('All finished.')
+    channel = streams.InputChannel(iter(xrange(10)), 'c1')
+    flow = streams.ExecutionFlow()
+    b2 = flow.new_bolt(prime2, 'prime2', channel)
+    flow.new_bolt(prime3, 'prime3', b2.out_channel)
+    while True:
+        try:
+            p = flow.run()
+            if p:
+                print('{} is a prime number.'.format(p))
+        except StopIteration:
+            print('All finished.')
+            break
